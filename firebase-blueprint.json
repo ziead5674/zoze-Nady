@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user profile information and settings.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier for the user." },
+        "displayName": { "type": "string", "description": "User's display name." },
+        "photoURL": { "type": "string", "description": "URL to user's profile photo." },
+        "email": { "type": "string", "description": "User's email address." },
+        "theme": { "type": "string", "enum": ["light", "dark"], "description": "User's preferred theme." },
+        "fontSize": { "type": "number", "description": "User's preferred font size." },
+        "reciter": { "type": "string", "description": "User's preferred Quran reciter." },
+        "language": { "type": "string", "enum": ["ar", "en"], "description": "User's preferred language." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the profile was created." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "When the profile was last updated." }
+      },
+      "required": ["uid", "displayName", "email"]
+    },
+    "Reminder": {
+      "title": "Reminder",
+      "description": "Stores user's worship reminders.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the reminder." },
+        "title": { "type": "string", "description": "Title of the reminder." },
+        "time": { "type": "string", "description": "Time for the reminder (HH:mm)." },
+        "days": { "type": "array", "items": { "type": "string" }, "description": "Days of the week for the reminder." },
+        "enabled": { "type": "boolean", "description": "Whether the reminder is active." },
+        "type": { "type": "string", "enum": ["athkar", "sunnah", "prayer"], "description": "Type of reminder." }
+      },
+      "required": ["id", "title", "time", "days", "enabled", "type"]
+    },
+    "Favorite": {
+      "title": "Favorite",
+      "description": "Stores user's favorite Athkar or Duas.",
+      "type": "object",
+      "properties": {
+        "ids": { "type": "array", "items": { "type": "string" }, "description": "List of favorite IDs." }
+      },
+      "required": ["ids"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document."
+    },
+    "/users/{userId}/reminders/{reminderId}": {
+      "schema": "Reminder",
+      "description": "User's reminders subcollection."
+    },
+    "/users/{userId}/favorites/athkar": {
+      "schema": "Favorite",
+      "description": "User's favorite Athkar IDs."
+    },
+    "/users/{userId}/favorites/duas": {
+      "schema": "Favorite",
+      "description": "User's favorite Dua IDs."
+    }
+  }
+}

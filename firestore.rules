@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches request.auth.uid)
+    // Fields:
+    //   - uid: string (required) - matches userId
+    //   - displayName: string (required) - user's name
+    //   - photoURL: string (optional) - user's photo
+    //   - email: string (required) - user's email
+    //   - theme: string (optional) - 'light' or 'dark'
+    //   - fontSize: number (optional) - 12-36
+    //   - reciter: string (optional) - reciter ID
+    //   - language: string (optional) - 'ar' or 'en'
+    //   - createdAt: timestamp (optional)
+    //   - updatedAt: timestamp (optional)
+    //
+    // Collection: users/{userId}/reminders
+    // Document ID: {reminderId}
+    // Fields:
+    //   - id: string (required)
+    //   - title: string (required)
+    //   - time: string (required) - HH:mm
+    //   - days: list (required) - list of strings
+    //   - enabled: bool (required)
+    //   - type: string (required) - 'athkar', 'sunnah', 'prayer'
+    //
+    // Collection: users/{userId}/favorites
+    // Document ID: 'athkar' or 'duas'
+    // Fields:
+    //   - ids: list (required) - list of strings
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "zieadnady7050@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    // Domain Validators
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'displayName', 'email']) &&
+             data.uid == request.auth.uid &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100 &&
+             isValidEmail(data.email) &&
+             (!('photoURL' in data) || isValidUrl(data.photoURL)) &&
+             (!('theme' in data) || data.theme in ['light', 'dark']) &&
+             (!('fontSize' in data) || (data.fontSize is number && data.fontSize >= 12 && data.fontSize <= 36)) &&
+             (!('language' in data) || data.language in ['ar', 'en']);
+    }
+
+    function isValidReminder(data) {
+      return hasRequiredFields(['id', 'title', 'time', 'days', 'enabled', 'type']) &&
+             data.id is string &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 100 &&
+             data.time is string && data.time.matches("^\\d{2}:\\d{2}$") &&
+             data.days is list && data.days.size() <= 7 &&
+             data.enabled is bool &&
+             data.type in ['athkar', 'sunnah', 'prayer'];
+    }
+
+    function isValidFavorite(data) {
+      return hasRequiredFields(['ids']) &&
+             data.ids is list && data.ids.size() <= 1000;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (!('role' in request.resource.data) || request.resource.data.role == 'user');
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+
+      match /reminders/{reminderId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if isOwner(userId) && isValidReminder(request.resource.data);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
+      match /favorites/{favoriteId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if isOwner(userId) && isValidFavorite(request.resource.data);
+      }
+    }
+  }
+}

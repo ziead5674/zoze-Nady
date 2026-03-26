@@ -1,0 +1,8 @@
+{
+  "name": "سنن",
+  "description": "تطبيق إسلامي شامل يضم القرآن الكريم، الأذكار، الأدعية، والسنن المهجورة.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}

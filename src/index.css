@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Noto Serif", "Amiri", serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #012d1d;
+  --color-primary-container: #1b4332;
+  --color-secondary: #775a19;
+  --color-secondary-container: #fed488;
+  --color-background: #fbf9f4;
+  --color-surface: #fbf9f4;
+  --color-surface-low: #f5f3ee;
+  --color-surface-high: #eae8e3;
+  --color-surface-highest: #e4e2dd;
+  --color-on-surface: #1b1c19;
+  --color-on-surface-variant: #414844;
+  --color-outline-variant: #c1c8c2;
+}
+
+.dark {
+  --color-primary: #86efac; /* Lighter green for dark mode */
+  --color-primary-container: #064e3b;
+  --color-secondary: #fcd34d; /* Warmer gold */
+  --color-secondary-container: #78350f;
+  --color-background: #0f172a; /* Deep navy background */
+  --color-surface: #1e293b; /* Slate surface */
+  --color-surface-low: #334155;
+  --color-surface-high: #475569;
+  --color-surface-highest: #64748b;
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #cbd5e1;
+  --color-outline-variant: #334155;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-sans transition-colors duration-300;
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    @apply font-serif;
+  }
+}
+
+.glass {
+  @apply bg-surface/80 backdrop-blur-xl;
+}
+
+.editorial-shadow {
+  box-shadow: 0 20px 40px rgba(27, 28, 25, 0.06);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
